@@ -10,7 +10,7 @@ def main():
     out_send = cv2.VideoWriter('appsrc is-live=true ! videoconvert ! \
                                 omxh264enc bitrate=12000000 ! video/x-h264, \
                                 stream-format=byte-stream ! rtph264pay pt=96 ! \
-                                udpsink host=127.0.0.1 port=5400 async=false',
+                                udpsink host=192.168.88.227 port=8554 async=false',
                                 cv2.CAP_GSTREAMER, 0, 30, (1920,1080), True)
 
     if not out_send.isOpened():
@@ -24,21 +24,26 @@ def main():
     server.attach(None)
     
     factory = GstRtspServer.RTSPMediaFactory.new()
-    factory.set_launch("(udpsrc name=pay0 port=5400 buffer-size=524288 \
+    factory.set_launch("(udpsrc name=pay0 port=8554 buffer-size=524288 \
                         caps=\"application/x-rtp, media=video, clock-rate=90000, \
                         encoding-name=(string)H264, payload=96 \")")
 
     factory.set_shared(True)
-    server.get_mount_points().add_factory("/ds-test", factory)
+    server.get_mount_points().add_factory("/test", factory)
  
-    print("\n *** Launched RTSP Streaming at rtsp://localhost:%d/ds-test ***\n\n" % rtsp_port_num)    
- 
-    cap = cv2.VideoCapture("video/RGBT_RGB.mp4")
- 
-    while True:
-        _, mat = cap.read()
-        out_send.write(mat)
-        cv2.waitKey(30) 
+    print("\n *** Launched RTSP Streaming at rtsp://192.168.88.227:%d/test ***\n\n" % rtsp_port_num)    
+    
+    while True :
+        cap = cv2.VideoCapture("video/RGBT_RGB.mp4")
+        #cap = cv2.VideoCapture("video/goat_cat_meme.mp4")
+    
+        while True:
+            ret, mat = cap.read()
+            if not ret:
+                print("end of video")
+                break
+            out_send.write(mat)
+            cv2.waitKey(30) 
         
 if __name__ == '__main__':
     main()
